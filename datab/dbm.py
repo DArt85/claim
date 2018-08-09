@@ -6,6 +6,9 @@ import numpy as np
 from datetime import datetime
 
 class DbManager():
+    """
+    Proxy-like class providing some high level logic over MongoDB.
+    """
 
     class DbException(Exception):
         def __init__(self, msg):
@@ -17,6 +20,9 @@ class DbManager():
         self._active_db = None
 
     def add_db(self, name):
+        """
+        Add database and initialize it.
+        """
         if (name in self._dbs):
             raise DbException("DB %s already exists")
 
@@ -38,6 +44,18 @@ class DbManager():
         self._active_db = value
 
     def fill_in_random(self, name, data_template, size):
+        """
+        Fill it random data based on a simple template.
+
+                {'field_1': (type, metdata), ...}
+
+        Type can be int, float or str. Metadata depends on type and is used as a guideline for generating
+        random entries and should adhere to the following rules:
+
+                int     -> (min_value, max_value)
+                float   -> (min_value, range)
+                str     -> (list of all possible string values)     
+        """
         def get_random_set(dtype, meta):
             data_set = []
             if (dtype == int):
@@ -55,6 +73,7 @@ class DbManager():
             raise DbException("Set active DB first")
 
         keys = list(data_template.keys())
+        # randomly generated vectors are zipped together and map function is used to build a dict object
         gen_data = list(map(lambda _: {keys[i]:data[i] for i in range(len(keys)) 
                                         for data in zip(*(get_random_set(v[0], v[1]) for v in data_template.values()))
                                       }, 
@@ -72,3 +91,4 @@ if __name__ == '__main__':
     claim_temp = {'name': (str, ['Jon','Ola','Kari','Bente']), 'age': (int, (18, 75)), 'income_knok': (float, (100, 1000))}
     if not dbm.fill_in_random('claims', claim_temp, 10):
         print("Failed to fill in database")
+
