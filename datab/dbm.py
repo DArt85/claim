@@ -58,9 +58,11 @@ class DbManager():
         """
         def get_random_set(dtype, meta):
             data_set = []
-            if (dtype == int):
+            if (dtype == bool):
+                data_set = [(i > 0) for i in np.random.random_integers(0, 1, size)]
+            elif (dtype == int):
                 (minv, maxv) = meta
-                data_set = [int(i) for i in np.random.randint(minv, maxv, size)]
+                data_set = [int(i) for i in np.random.random_integers(minv, maxv, size)]
             elif (dtype == float):
                 (minv, delta) = meta
                 data_set = [minv + x * delta for x in np.random.ranf(size)]
@@ -75,7 +77,7 @@ class DbManager():
         keys = list(data_template.keys())
         # randomly generated vectors are zipped together and map function is used to build a dict object
         gen_data = list(map(lambda _: {keys[i]:data[i] for i in range(len(keys)) 
-                                        for data in zip(*(get_random_set(v[0], v[1]) for v in data_template.values()))
+                                        for data in zip(*(get_random_set(v[0], v[1]) if v else None for v in data_template.values()))
                                       }, 
                             range(size))
                         )
@@ -88,7 +90,8 @@ if __name__ == '__main__':
     dbm.add_db('test')
     dbm.active_db = 'test'
 
-    claim_temp = {'name': (str, ['Jon','Ola','Kari','Bente']), 'age': (int, (18, 75)), 'income_knok': (float, (100, 1000))}
+    claim_temp = {'name': (str, ['Jon','Ola','Kari','Bente']), 'age': (int, (18, 75)), 'income_knok': (float, (100, 1000)),
+                  'auto_handler': None, 'check_needed': (bool, ())}
     if not dbm.fill_in_random('claims', claim_temp, 10):
         print("Failed to fill in database")
 
