@@ -1,6 +1,10 @@
 
-from claim.handlers import *
-from claim.common.utils import Singleton
+from core.handlers import *
+from common.utils import Singleton
+
+class ModelException(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
 
 class ModelManager(metaclass=Singleton):
     """
@@ -8,27 +12,24 @@ class ModelManager(metaclass=Singleton):
     apply handling models to claims.
     """
 
-    class ManagerException(Exception):
-        def __init__(self, msg):
-            super().__init__(msg)
-
     def __init__(self):
-        self._models = []
+        self._models = {}
         self._default_model = None
 
-    def add_model(self, model):
-        if not issubclass(model, AbstractClaimHandler):
-            raise ManagerException("Model should be a subclass of %s" % AbstractClaimHandler)
-        self._models.append(model)
+    def __len__(self):
+        return len(self._models)
 
-    def set_default_model(self, model_cl):
-        for mod in self._models:
-            if isinstance(mod, model_cl):
-                self._default_model = mod
-                break
+    def add(self, model):
+        if not issubclass(model.__class__, AbstractClaimHandler) and not isinstance(model, AbstractClaimHandler):
+            raise ModelException("Model should be a subclass of %s" % AbstractClaimHandler)
+        if self._models.get(model.__class__):
+            raise ModelException("Model %s was already added" % model.__class__)
+        self._models[model.__class__] = model
 
-        if not self._default_model:
-            raise ManagerException("Can't set model %s before it is added" % model_cl)
+    def set_default(self, model_cl):
+        if not self._models.get(model_cl):
+            raise ModelException("Can't set model %s before it is added" % model_cl)
+        self._default_model = self._models[model_cl]
 
     def process_claims(self, claims):
         return [self._default_model.classify_claim(c) for c in claims]
