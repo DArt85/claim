@@ -2,6 +2,7 @@
 import unittest
 
 from datab.db_manager import *
+from datab.mongo import *
 from common.utils import Util
 
 class DbManagerTestCase(unittest.TestCase):
@@ -46,5 +47,70 @@ class DbManagerTestCase(unittest.TestCase):
         self.assertTrue(not isinstance(res, Exception), "Exception: %s" % res)
         self.assertTrue(not (set(res) ^ exp_vals), "Got %s, expected %s" % (res, exp_vals))
 
-if __name__ == '__main__':
+class MongoTestCase(unittest.TestCase):
+
+    class MongoClientMock():
+        
+        class DbMock():
+            def __init__(self):
+                self._sz = 0
+            def __getitem__(self, _):
+                return self
+            def insert_one(self, _):
+                self._sz += 1
+            def insert_many(self, iter):
+                self._sz += len(list(iter))
+            def count(self):
+                return self._sz
+
+        def __init__(self):
+            self._db = {}
+
+        def __getitem__(self, name):
+            if not self._db.get(name):
+                self._db[name] = MongoTestCase.MongoClientMock.DbMock()
+            return self._db[name]
+
+        #def __setitem__(self, name, val):
+        #    self._db[name] = val
+
+    def setUp(self):
+        self.modb = Mongo()
+        self.modb._client = MongoTestCase.MongoClientMock()
+
+    def test_add(self):
+        db_name = 'test'
+        res = Util.safe_call(self.modb.add_db, db_name)
+        self.assertTrue(not isinstance(res, Exception), "Exception adding database: %s" % res)
+        # try adding DB with same name again
+        res = Util.safe_call(self.modb.add_db, db_name)
+        self.assertTrue(isinstance(res, DbException), "Didn't get exception adding same DB name twice")
+        # try accessing database that wasn't added        
+        try:
+            self.modb.active_db = 'test1'
+        except Exception as e:
+            self.assertTrue(isinstance(e, DbException), "Expected DB error, but got %s" % e)
+        else:
+            self.assertTrue(False)
+
+        self.modb.active_db = db_name
+        cnt = self.modb.active_db.count()
+        self.assertEqual(cnt, 1, "Expected 1 table, got %d" % cnt)
+
+    def test_fill_random(self):
+        db_name = 'test'
+        self.modb.add_db(db_name)
+        self.modb.active_db = db_name
+
+        exp_cnt = 5
+        test_temp = {'name': (str, ['n1', 'n2']), 'ival': (int, (0, 10)), 'fval': (float, (0, 100)), 'bval': (bool, ())}
+        res = Util.safe_call(self.modb.fill_random, 'check', test_temp, exp_cnt)
+        self.assertTrue(not isinstance(res, DbException), "Exception filling DB: %s" % res)
+        self.assertTrue(res)
+
+        cnt = self.modb.active_db['check'].count()
+        self.assertEqual(cnt, exp_cnt + 1, "Expected %d entries, got %d" % (exp_cnt + 1, cnt))
+
+
+if __name__ == '__main__':  
     unittest.main()

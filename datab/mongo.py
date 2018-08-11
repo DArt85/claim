@@ -7,6 +7,13 @@ from datetime import datetime
 
 from datab.db_manager import *
 
+def init_check(func):
+    def wrap(*args, **kwargs):
+        if not args[0]._client:
+            raise DbException("Not initialized")
+        return func(*args, **kwargs)
+    return wrap
+
 class Mongo(BaseDriver):
     """
     Provides some high level logic over MongoDB.
@@ -17,21 +24,13 @@ class Mongo(BaseDriver):
         self._dbs = []
         self._active_db = None
 
-    @staticmethod
-    def init_check(func):
-        def wrap(*args, **kwargs):
-            if not args[0]._client:
-                raise DbException("Not initialized")
-            func(*args, **kwargs)
-        return wrap
-
     def init(self):
         try:
             self._client = pymongo.MongoClient('mongodb://localhost:27017/')
         except Exception as e:
             raise DbException("Failed to connect to mongodb server: %s" % e)
 
-    @Mongo.init_check
+    @init_check
     def add_db(self, name):
         """
         Add database and initialize it.
@@ -42,11 +41,11 @@ class Mongo(BaseDriver):
         db = self._client[name]
         db_init_data = {'user':    os.getlogin(),
                         'created': datetime.utcnow()}
-        db.init.insert_one(db_init_data)
+        db.insert_one(db_init_data)
         self._dbs.append(name)
 
     @property
-    @Mongo.init_check
+    @init_check
     def active_db(self):
         return self._client[self._active_db]
 
@@ -56,7 +55,7 @@ class Mongo(BaseDriver):
             raise DbException("DB %s doesn't exist" % value)
         self._active_db = value
 
-    @Mongo.init_check
+    @init_check
     def fill_random(self, name, data_template, size):
         """
         Fill it random data based on a simple template.
@@ -73,16 +72,16 @@ class Mongo(BaseDriver):
         def get_random_set(dtype, meta):
             data_set = []
             if (dtype == bool):
-                data_set = [(i > 0) for i in np.random.random_integers(0, 1, size)]
+                data_set = [(i > 0) for i in np.random.randint(0, 2, size)]
             elif (dtype == int):
                 (minv, maxv) = meta
-                data_set = [int(i) for i in np.random.random_integers(minv, maxv, size)]
+                data_set = [int(i) for i in np.random.randint(minv, maxv + 1, size)]
             elif (dtype == float):
                 (minv, delta) = meta
                 data_set = [minv + x * delta for x in np.random.ranf(size)]
             elif (dtype == str):
                 maxv = len(meta) - 1
-                data_set = [meta[i] for i in np.random.random_integers(0, maxv, size)]
+                data_set = [meta[i] for i in np.random.randint(0, maxv + 1, size)]
             return data_set
 
         if not self._active_db:
