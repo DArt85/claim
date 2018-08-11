@@ -13,10 +13,25 @@ class Mongo(BaseDriver):
     """
 
     def __init__(self):
-        self._client = pymongo.MongoClient('mongodb://localhost:27017/')
+        self._client = None
         self._dbs = []
         self._active_db = None
 
+    @staticmethod
+    def init_check(func):
+        def wrap(*args, **kwargs):
+            if not args[0]._client:
+                raise DbException("Not initialized")
+            func(*args, **kwargs)
+        return wrap
+
+    def init(self):
+        try:
+            self._client = pymongo.MongoClient('mongodb://localhost:27017/')
+        except Exception as e:
+            raise DbException("Failed to connect to mongodb server: %s" % e)
+
+    @Mongo.init_check
     def add_db(self, name):
         """
         Add database and initialize it.
@@ -31,9 +46,9 @@ class Mongo(BaseDriver):
         self._dbs.append(name)
 
     @property
+    @Mongo.init_check
     def active_db(self):
         return self._client[self._active_db]
-        return None
 
     @active_db.setter
     def active_db(self, value):
@@ -41,6 +56,7 @@ class Mongo(BaseDriver):
             raise DbException("DB %s doesn't exist" % value)
         self._active_db = value
 
+    @Mongo.init_check
     def fill_random(self, name, data_template, size):
         """
         Fill it random data based on a simple template.
