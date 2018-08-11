@@ -6,6 +6,9 @@ class DbException(Exception):
         super().__init__(msg)
 
 class BaseDriver():
+    def init(self):
+        raise NotImplementedError("init")
+
     def add_db(self, name):
         raise NotImplementedError("add_db")
 

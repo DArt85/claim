@@ -23,6 +23,14 @@ class DbManagerTestCase(unittest.TestCase):
         self.assertTrue(not isinstance(res, Exception), "Exception adding driver: %s" % res)
         self.assertEqual(len(self.dbm), 1, "DB Manager is still empty")
 
+    def test_add_fail(self):
+        res = Util.safe_call(self.dbm.add_driver, 1, {})
+        self.assertTrue(isinstance(res, DbException), "Expected exception when adding invalid driver, got %s" % res)
+        # check that we can't insert driver with existing id
+        res = Util.safe_call(self.dbm.add_driver, 0, DbManagerTestCase.TestDriver(0))
+        self.assertTrue(isinstance(res, DbException), "Expected exception, but got %s" % res)
+        self.assertEqual(len(self.dbm), 1, "DB manager size changed")
+
     def test_cmd_one(self):
         test_val = 5
         res = Util.safe_call(self.dbm.cmd_one, 0, lambda db: db.echo(test_val))
