@@ -1,7 +1,12 @@
 
 from claim.handlers import *
+from claim.common.utils import Singleton
 
-class ModelManager():
+class ModelManager(metaclass=Singleton):
+    """
+    Proxy class allowing model management and containing logic to select and 
+    apply handling models to claims.
+    """
 
     class ManagerException(Exception):
         def __init__(self, msg):
