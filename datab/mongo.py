@@ -5,14 +5,12 @@ import numpy as np
 
 from datetime import datetime
 
-class DbManager():
-    """
-    Proxy-like class providing some high level logic over MongoDB.
-    """
+from claim.datab.db_manager import DbException
 
-    class DbException(Exception):
-        def __init__(self, msg):
-            super().__init__(msg)
+class Mongo():
+    """
+    Provides some high level logic over MongoDB.
+    """
 
     def __init__(self):
         self._client = pymongo.MongoClient('mongodb://localhost:27017/')
@@ -43,7 +41,7 @@ class DbManager():
             raise DbException("DB %s doesn't exist" % value)
         self._active_db = value
 
-    def fill_in_random(self, name, data_template, size):
+    def fill_random(self, name, data_template, size):
         """
         Fill it random data based on a simple template.
 
@@ -86,7 +84,7 @@ class DbManager():
         return (len(gen_data) == len(res.inserted_ids))
 
 if __name__ == '__main__':
-    dbm = DbManager()
+    dbm = Mongo()
     dbm.add_db('test')
     dbm.active_db = 'test'
 
