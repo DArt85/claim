@@ -8,3 +8,13 @@ class Singleton(type):
         if cls.instance is None:
             cls.instance = super(Singleton, cls).__call__(*args, **kw)
         return cls.instance
+
+class Util():
+
+    @staticmethod
+    def safe_call(func, *args):
+        try:
+            res = func(*args)
+        except Exception as e:
+            res = e
+        return res

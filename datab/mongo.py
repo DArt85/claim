@@ -5,9 +5,9 @@ import numpy as np
 
 from datetime import datetime
 
-from claim.datab.db_manager import DbException
+from datab.db_manager import *
 
-class Mongo():
+class Mongo(BaseDriver):
     """
     Provides some high level logic over MongoDB.
     """
