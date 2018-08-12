@@ -1,6 +1,8 @@
 
 import numpy as np
 
+from datetime import datetime
+
 class Singleton(type):
     def __init__(cls, name, bases, dict):
         super(Singleton, cls).__init__(name, bases, dict)
@@ -40,3 +42,7 @@ class Util():
     @staticmethod
     def list_diff(list1, list2):
         return list(set(list1) ^ set(list2))
+
+    @staticmethod
+    def datetime():
+        return datetime.utcnow()

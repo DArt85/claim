@@ -2,7 +2,7 @@
 import os
 import pymongo
 
-from datetime import datetime
+from pandas import DataFrame
 
 from datab.db_manager import *
 from common.utils import Util
@@ -40,13 +40,15 @@ class Mongo(BaseDriver):
 
         db = self._client[name]
         db_init_data = {'user':    os.getlogin(),
-                        'created': datetime.utcnow()}
-        db.insert_one(db_init_data)
+                        'created': Util.datetime()}
+        db['init'].insert_one(db_init_data)
         self._dbs.append(name)
 
     @property
     @init_check
     def active_db(self):
+        if not self._active_db:
+            raise DbException("Set active DB first")
         return self._client[self._active_db]
 
     @active_db.setter
@@ -56,7 +58,7 @@ class Mongo(BaseDriver):
         self._active_db = value
 
     @init_check
-    def fill_random(self, name, data_template, size):
+    def fill_random(self, table_name, data_template, size):
         """
         Fill it random data based on a simple template.
 
@@ -69,10 +71,6 @@ class Mongo(BaseDriver):
                 float   -> (min_value, range)
                 str     -> (list of all possible string values)     
         """
-
-        if not self._active_db:
-            raise DbException("Set active DB first")
-
         keys = list(data_template.keys())
         # randomly generated vectors are zipped together and map function is used to build a dict object
         gen_data = list(map(lambda _: {keys[i]:data[i] for i in range(len(keys)) 
@@ -81,6 +79,21 @@ class Mongo(BaseDriver):
                             range(size))
                         )
 
-        res = self.active_db[name].insert_many(gen_data)
-        return (len(gen_data) == len(res.inserted_ids))
+        res = self.active_db[table_name].insert_many(gen_data)
+        return (len(gen_data) == len(res.inserted_ids)) if res else False
 
+    @init_check
+    def read(self, table_name, keys=None, filt=None):
+        query_res = self.active_db[table_name].find(filt, keys)
+        if not query_res:
+            return DataFrame()
+
+        if not keys:
+            keys = list(query_res[0].keys())
+            keys.remove('_id')
+
+        data = {k:[] for k in keys}
+        for doc in query_res:
+            [data[k].append(doc[k]) for k in keys]
+        query_res.close()
+        return DataFrame(data)

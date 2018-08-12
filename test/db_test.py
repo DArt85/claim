@@ -74,6 +74,7 @@ class MongoTestCase(unittest.TestCase):
     def setUp(self):
         self.modb = Mongo()
         self.modb._client = MongoTestCase.MongoClientMock()
+        self.test_temp = {'name': (str, ['n1', 'n2']), 'ival': (int, (0, 10)), 'fval': (float, (0, 100)), 'bval': (bool, ())}
 
     def test_add(self):
         db_name = 'test'
@@ -94,16 +95,16 @@ class MongoTestCase(unittest.TestCase):
         cnt = self.modb.active_db.count()
         self.assertEqual(cnt, 1, "Expected 1 table, got %d" % cnt)
 
-    def test_fill_random(self):
-        db_name = 'test'
+    def _init_db(self, db_name):
         self.modb.add_db(db_name)
         self.modb.active_db = db_name
 
+    def test_fill_random(self):
+        self._init_db('test')
+
         exp_cnt = 5
-        test_temp = {'name': (str, ['n1', 'n2']), 'ival': (int, (0, 10)), 'fval': (float, (0, 100)), 'bval': (bool, ())}
-        res = Util.safe_call(self.modb.fill_random, 'check', test_temp, exp_cnt)
+        res = Util.safe_call(self.modb.fill_random, 'check', self.test_temp, exp_cnt)
         self.assertTrue(not isinstance(res, DbException), "Exception filling DB: %s" % res)
-        self.assertTrue(res)
 
         cnt = self.modb.active_db['check'].count()
         self.assertEqual(cnt, exp_cnt + 1, "Expected %d entries, got %d" % (exp_cnt + 1, cnt))
