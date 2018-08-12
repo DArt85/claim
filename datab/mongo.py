@@ -30,6 +30,13 @@ class Mongo(BaseDriver):
         except Exception as e:
             raise DbException("Failed to connect to mongodb server: %s" % e)
 
+    def __del__(self):
+        if self._client:
+            try:
+                self._client.close()
+            except:
+                pass
+
     @init_check
     def add_db(self, name):
         """
