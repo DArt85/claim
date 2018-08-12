@@ -93,12 +93,13 @@ class Mongo(BaseDriver):
     @init_check
     def read(self, table_name, keys=None, filt=None, limit=0):
         query_res = self.active_db[table_name].find(filt, keys, limit=limit)
-        if not query_res:
+        try:
+            _ = query_res[0]
+        except IndexError:
             return DataFrame()
 
         if not keys:
             keys = list(query_res[0].keys())
-            keys.remove('_id')
 
         data = {k:[] for k in keys}
         for doc in query_res:

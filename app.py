@@ -18,7 +18,7 @@ class AppLogic():
         self.dbm.init()
         self.dbm.add_db('test')
         self.dbm.active_db = 'test'
-        if not self.dbm.fill_random('claims', self.claim_temp, 1000):
+        if not self.dbm.fill_random('claims', self.claim_temp, 15):
             raise Exception("Failed to fill in database")
 
         self.mgr.add(ChallengerClaimHandler(20, 300))
@@ -31,8 +31,12 @@ class AppLogic():
             raise Exception("Unknown model %s" % model)
 
     def process_todays_claims(self):
-        data = self.dbm.read('claims', filt={'status':''}, limit=20)        
-        data['status'] = ['accepted' if res else 'rejected' for res in self.mgr.process_claims(data)]
+        data = self.dbm.read('claims', filt={'status':''}, limit=10)
+        if not data.empty:
+            data['status'] = ['accepted' if res else 'rejected' for res in self.mgr.process_claims(data)]
+            # TODO: need a more efficient way
+            for _id, stat in zip(data['_id'], data['status']):
+                self.dbm.active_db['claims'].update_many({'_id':_id}, {'$set': {'status':stat}})
         return data
 
 app = Flask("Claim processing")
@@ -43,4 +47,12 @@ apl.configure('basic')
 @app.route('/')
 def index():
     data = apl.process_todays_claims()
-    return render_template("claims.html", date=Util.datetime(), cols=data.columns, rows=[r for _,r in data.iterrows()])
+    if not data.empty:
+        columns = list(data.columns)
+        columns.remove('_id')
+        return render_template("claims.html", date=Util.datetime(), cols=columns, rows=[r for _,r in data.iterrows()])
+    else:
+        return "No new claims found"
+
+if __name__ == '__main__':
+    data = apl.process_todays_claims()
