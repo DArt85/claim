@@ -1,4 +1,6 @@
 
+import numpy as np
+
 class Singleton(type):
     def __init__(cls, name, bases, dict):
         super(Singleton, cls).__init__(name, bases, dict)
@@ -18,3 +20,19 @@ class Util():
         except Exception as e:
             res = e
         return res
+
+    @staticmethod
+    def get_random_set(dtype, meta):
+        data_set = []
+        if (dtype == bool):
+            data_set = [(i > 0) for i in np.random.randint(0, 2, size)]
+        elif (dtype == int):
+            (minv, maxv) = meta
+            data_set = [int(i) for i in np.random.randint(minv, maxv + 1, size)]
+        elif (dtype == float):
+            (minv, delta) = meta
+            data_set = [minv + x * delta for x in np.random.ranf(size)]
+        elif (dtype == str):
+            maxv = len(meta) - 1
+            data_set = [meta[i] for i in np.random.randint(0, maxv + 1, size)]
+        return data_set
