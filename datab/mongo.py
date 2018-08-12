@@ -91,8 +91,8 @@ class Mongo(BaseDriver):
         return (len(gen_data) == len(res.inserted_ids)) if res else False
 
     @init_check
-    def read(self, table_name, keys=None, filt=None):
-        query_res = self.active_db[table_name].find(filt, keys)
+    def read(self, table_name, keys=None, filt=None, limit=0):
+        query_res = self.active_db[table_name].find(filt, keys, limit=limit)
         if not query_res:
             return DataFrame()
 
