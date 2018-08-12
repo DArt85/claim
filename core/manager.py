@@ -32,4 +32,5 @@ class ModelManager(metaclass=Singleton):
         self._default_model = self._models[model_cl]
 
     def process_claims(self, claims):
-        return [self._default_model.classify_claim(c) for c in claims]
+        sz = claims.shape[0]
+        return [self._default_model.classify_claim(claims.xs(i)) for i in range(sz)]

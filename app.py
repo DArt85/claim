@@ -1,9 +1,12 @@
 
+import pandas as pd
+
 from flask import Flask, render_template
-from pandas import DataFrame
 
 from common.utils import Util
 from datab.mongo import Mongo
+from core.manager import ModelManager
+from core.handlers import *
 
 app = Flask("Claim processing")
 
@@ -17,5 +20,9 @@ def index():
     if not dbm.fill_random('claims', claim_temp, 10):
         print("Failed to fill in database")
     data = dbm.read('claims')
+    mgr = ModelManager()
+    mgr.add(BasicClaimHandler())
+    mgr.add(ChallengerClaimHandler(20, 300))
+    mgr.set_default(BasicClaimHandler)
+    data['status'] = pd.Series(mgr.process_claims(data), index=data.index)
     return render_template("claims.html", date=Util.datetime(), cols=data.columns, rows=[r for _,r in data.iterrows()])
-    

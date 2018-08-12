@@ -33,6 +33,7 @@ class Mongo(BaseDriver):
     def __del__(self):
         if self._client:
             try:
+                self._client.drop_database(self._active_db)
                 self._client.close()
             except:
                 pass
