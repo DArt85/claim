@@ -5,6 +5,7 @@ import pymongo
 from datetime import datetime
 
 from datab.db_manager import *
+from common.utils import Util
 
 def init_check(func):
     def wrap(*args, **kwargs):
@@ -68,13 +69,14 @@ class Mongo(BaseDriver):
                 float   -> (min_value, range)
                 str     -> (list of all possible string values)     
         """
+
         if not self._active_db:
             raise DbException("Set active DB first")
 
         keys = list(data_template.keys())
         # randomly generated vectors are zipped together and map function is used to build a dict object
         gen_data = list(map(lambda _: {keys[i]:data[i] for i in range(len(keys)) 
-                                        for data in zip(*(Util.get_random_set(v[0], v[1]) if v else None for v in data_template.values()))
+                                        for data in zip(*(Util.get_random_set(v[0], v[1], size) if v else None for v in data_template.values()))
                                       }, 
                             range(size))
                         )

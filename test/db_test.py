@@ -71,9 +71,6 @@ class MongoTestCase(unittest.TestCase):
                 self._db[name] = MongoTestCase.MongoClientMock.DbMock()
             return self._db[name]
 
-        #def __setitem__(self, name, val):
-        #    self._db[name] = val
-
     def setUp(self):
         self.modb = Mongo()
         self.modb._client = MongoTestCase.MongoClientMock()
@@ -110,7 +107,6 @@ class MongoTestCase(unittest.TestCase):
 
         cnt = self.modb.active_db['check'].count()
         self.assertEqual(cnt, exp_cnt + 1, "Expected %d entries, got %d" % (exp_cnt + 1, cnt))
-
 
 if __name__ == '__main__':  
     unittest.main()

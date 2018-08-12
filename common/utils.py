@@ -22,7 +22,7 @@ class Util():
         return res
 
     @staticmethod
-    def get_random_set(dtype, meta):
+    def get_random_set(dtype, meta, size):
         data_set = []
         if (dtype == bool):
             data_set = [(i > 0) for i in np.random.randint(0, 2, size)]
