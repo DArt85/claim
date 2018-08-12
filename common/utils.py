@@ -36,3 +36,7 @@ class Util():
             maxv = len(meta) - 1
             data_set = [meta[i] for i in np.random.randint(0, maxv + 1, size)]
         return data_set
+
+    @staticmethod
+    def list_diff(list1, list2):
+        return list(set(list1) ^ set(list2))

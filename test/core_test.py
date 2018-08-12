@@ -7,6 +7,11 @@ from core.manager import *
 
 class CoreTestCase(unittest.TestCase):
 
+    class ClaimMock():
+        def __init__(self, age, income):
+            self.age = age
+            self.income = income
+
     def setUp(self):
         self.mgr = ModelManager()
 
@@ -28,4 +33,8 @@ class CoreTestCase(unittest.TestCase):
         self.assertTrue(not isinstance(res, ModelException))
 
     def test_classify_claims(self):
-        pass
+        claims = [CoreTestCase.ClaimMock(age, inc) for (age, inc) in zip([25, 45, 46, 60], [125, 400, 500, 200])]
+        self.mgr.set_default(BasicClaimHandler)
+        exp_res = [False, False, True, True]
+        res = Util.safe_call(self.mgr.process_claims, claims)
+        self.assertTrue(not Util.list_diff(res, exp_res), "Expected %s, got %s" % (res, exp_res))

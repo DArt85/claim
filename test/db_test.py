@@ -42,10 +42,10 @@ class DbManagerTestCase(unittest.TestCase):
         res = Util.safe_call(self.dbm.add_driver, 1, DbManagerTestCase.TestDriver(1))
         self.assertTrue(not isinstance(res, Exception), "Exception adding new driver: %s" % res)
         arg = 1
-        exp_vals = set(range(arg, len(self.dbm) + arg))
+        exp_vals = range(arg, len(self.dbm) + arg)
         res = Util.safe_call(self.dbm.cmd_all, lambda db: db.echo(arg))
         self.assertTrue(not isinstance(res, Exception), "Exception: %s" % res)
-        self.assertTrue(not (set(res) ^ exp_vals), "Got %s, expected %s" % (res, exp_vals))
+        self.assertTrue(not Util.list_diff(res, exp_vals), "Got %s, expected %s" % (res, exp_vals))
 
 class MongoTestCase(unittest.TestCase):
 
